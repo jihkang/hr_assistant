@@ -1,37 +1,9 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter
 
-from hr_assistant_backend.schemas.assistant import (
-    AssetItem,
-    AssetListResponse,
-    ChatRequest,
-    ChatResponse,
-    HealthResponse,
-)
-from hr_assistant_backend.services.assistant import AssistantService
+from hr_assistant_backend.api.assistant import router as assistant_router
+from hr_assistant_backend.api.auth import admin_router, router as auth_router
 
 router = APIRouter()
-service = AssistantService()
-
-
-@router.get("/health", response_model=HealthResponse)
-def health() -> HealthResponse:
-    return HealthResponse(status="ok", service="hr-assistant-backend")
-
-
-@router.get("/assets", response_model=AssetListResponse)
-def list_assets(
-    user_id: str = Query(default="emp-1001"),
-    category: str | None = Query(default=None),
-    available_only: bool = Query(default=True),
-) -> AssetListResponse:
-    items = service.list_assets(
-        user_id=user_id,
-        category=category,
-        available_only=available_only,
-    )
-    return AssetListResponse(items=[AssetItem(**item) for item in items])
-
-
-@router.post("/assistant/chat", response_model=ChatResponse)
-def chat(payload: ChatRequest) -> ChatResponse:
-    return service.answer(payload)
+router.include_router(assistant_router)
+router.include_router(auth_router)
+router.include_router(admin_router)

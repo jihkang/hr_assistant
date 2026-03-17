@@ -1,11 +1,6 @@
 from pydantic import BaseModel, Field
 
 
-class HealthResponse(BaseModel):
-    status: str
-    service: str
-
-
 class AssetItem(BaseModel):
     name: str
     category: str

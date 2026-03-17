@@ -2,39 +2,38 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signupSchema, type SignupFormData } from "@/lib/validations/signup";
+import { loginSchema, type LoginFormData } from "@/lib/validations/login";
+import { login } from "@/lib/auth";
 
-type FieldErrors = Partial<Record<keyof SignupFormData, string>>;
+type FieldErrors = Partial<Record<keyof LoginFormData, string>>;
 
-export default function SignupPage() {
+export default function LoginPage() {
   const router = useRouter();
-  const [form, setForm] = useState<SignupFormData>({
-    name: "",
+  const [form, setForm] = useState<LoginFormData>({
     email: "",
     password: "",
-    confirmPassword: "",
-    department: "",
   });
   const [errors, setErrors] = useState<FieldErrors>({});
+  const [serverError, setServerError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
-    if (errors[name as keyof SignupFormData]) {
+    if (errors[name as keyof LoginFormData]) {
       setErrors({ ...errors, [name]: undefined });
     }
+    if (serverError) setServerError("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const result = signupSchema.safeParse(form);
+    const result = loginSchema.safeParse(form);
     if (!result.success) {
       const fieldErrors: FieldErrors = {};
       for (const issue of result.error.issues) {
-        const field = issue.path[0] as keyof SignupFormData;
+        const field = issue.path[0] as keyof LoginFormData;
         if (!fieldErrors[field]) {
           fieldErrors[field] = issue.message;
         }
@@ -44,8 +43,16 @@ export default function SignupPage() {
     }
 
     setErrors({});
-    // TODO: 실제 API 연동
-    router.push("/dashboard");
+    setLoading(true);
+
+    try {
+      await login(form.email, form.password);
+      router.push("/dashboard");
+    } catch (err) {
+      setServerError(err instanceof Error ? err.message : "로그인에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -58,52 +65,15 @@ export default function SignupPage() {
             <br />
             통합 솔루션
           </p>
-          <div style={styles.featureList}>
-            <div style={styles.featureItem}>
-              <span style={styles.featureIcon}>👥</span>
-              <span>직원 정보 및 조직 관리</span>
-            </div>
-            <div style={styles.featureItem}>
-              <span style={styles.featureIcon}>📋</span>
-              <span>근태 및 휴가 관리</span>
-            </div>
-            <div style={styles.featureItem}>
-              <span style={styles.featureIcon}>💰</span>
-              <span>급여 및 자산 관리</span>
-            </div>
-            <div style={styles.featureItem}>
-              <span style={styles.featureIcon}>📊</span>
-              <span>인사 데이터 분석 및 리포트</span>
-            </div>
-          </div>
         </div>
       </div>
 
       <div style={styles.right}>
         <form onSubmit={handleSubmit} style={styles.form}>
-          <h2 style={styles.formTitle}>회원가입</h2>
-          <p style={styles.formSubtitle}>
-            HR Assistant에 오신 것을 환영합니다
-          </p>
+          <h2 style={styles.formTitle}>로그인</h2>
+          <p style={styles.formSubtitle}>계정에 로그인하세요</p>
 
-          {Object.keys(errors).length > 0 && (
-            <div style={styles.error}>
-              입력 정보를 확인해주세요.
-            </div>
-          )}
-
-          <div style={styles.field}>
-            <label style={styles.label}>이름</label>
-            <input
-              type="text"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="홍길동"
-              style={errors.name ? { ...styles.input, ...styles.inputError } : styles.input}
-            />
-            {errors.name && <p style={styles.fieldError}>{errors.name}</p>}
-          </div>
+          {serverError && <div style={styles.error}>{serverError}</div>}
 
           <div style={styles.field}>
             <label style={styles.label}>이메일</label>
@@ -119,60 +89,21 @@ export default function SignupPage() {
           </div>
 
           <div style={styles.field}>
-            <label style={styles.label}>부서</label>
-            <select
-              name="department"
-              value={form.department}
-              onChange={handleChange}
-              style={errors.department ? { ...styles.input, ...styles.inputError } : styles.input}
-            >
-              <option value="">부서를 선택하세요</option>
-              <option value="hr">인사팀</option>
-              <option value="dev">개발팀</option>
-              <option value="marketing">마케팅팀</option>
-              <option value="finance">재무팀</option>
-              <option value="sales">영업팀</option>
-              <option value="operations">운영팀</option>
-            </select>
-            {errors.department && <p style={styles.fieldError}>{errors.department}</p>}
-          </div>
-
-          <div style={styles.field}>
             <label style={styles.label}>비밀번호</label>
             <input
               type="password"
               name="password"
               value={form.password}
               onChange={handleChange}
-              placeholder="영문, 숫자 포함 8자 이상"
+              placeholder="비밀번호를 입력하세요"
               style={errors.password ? { ...styles.input, ...styles.inputError } : styles.input}
             />
             {errors.password && <p style={styles.fieldError}>{errors.password}</p>}
           </div>
 
-          <div style={styles.field}>
-            <label style={styles.label}>비밀번호 확인</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              placeholder="비밀번호를 다시 입력하세요"
-              style={errors.confirmPassword ? { ...styles.input, ...styles.inputError } : styles.input}
-            />
-            {errors.confirmPassword && <p style={styles.fieldError}>{errors.confirmPassword}</p>}
-          </div>
-
-          <button type="submit" style={styles.button}>
-            가입하기
+          <button type="submit" style={styles.button} disabled={loading}>
+            {loading ? "로그인 중..." : "로그인"}
           </button>
-
-          <p style={styles.loginLink}>
-            이미 계정이 있으신가요?{" "}
-            <a href="/login" style={styles.link}>
-              로그인
-            </a>
-          </p>
         </form>
       </div>
     </div>
@@ -206,29 +137,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 20,
     lineHeight: 1.6,
     opacity: 0.9,
-    marginBottom: 48,
-  },
-  featureList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 20,
-  },
-  featureItem: {
-    display: "flex",
-    alignItems: "center",
-    gap: 16,
-    fontSize: 17,
-    opacity: 0.9,
-  },
-  featureIcon: {
-    fontSize: 24,
-    width: 40,
-    height: 40,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "rgba(255,255,255,0.15)",
-    borderRadius: 10,
   },
   right: {
     flex: 1,
@@ -279,9 +187,16 @@ const styles: Record<string, React.CSSProperties> = {
     border: "1px solid #d1d5db",
     fontSize: 15,
     outline: "none",
-    transition: "border-color 0.2s",
     background: "#ffffff",
     color: "#111827",
+  },
+  inputError: {
+    borderColor: "#ef4444",
+  },
+  fieldError: {
+    color: "#ef4444",
+    fontSize: 13,
+    marginTop: 4,
   },
   button: {
     width: "100%",
@@ -294,24 +209,5 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     cursor: "pointer",
     marginTop: 8,
-    transition: "background 0.2s",
-  },
-  loginLink: {
-    textAlign: "center",
-    marginTop: 20,
-    fontSize: 14,
-    color: "#6b7280",
-  },
-  link: {
-    color: "#2563eb",
-    fontWeight: 600,
-  },
-  inputError: {
-    borderColor: "#ef4444",
-  },
-  fieldError: {
-    color: "#ef4444",
-    fontSize: 13,
-    marginTop: 4,
   },
 };

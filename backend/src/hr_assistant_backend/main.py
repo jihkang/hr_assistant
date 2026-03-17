@@ -9,7 +9,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
-        description="사내 총무·인사 상담을 위한 FastAPI 백엔드",
+        description="FastAPI backend for the HR and general affairs assistant.",
     )
 
     app.add_middleware(

@@ -9,6 +9,11 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-hr_assistant}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      ADMIN_SEED_NAME: ${ADMIN_SEED_NAME:-}
+      ADMIN_SEED_EMAIL: ${ADMIN_SEED_EMAIL:-}
+      ADMIN_SEED_PASSWORD: ${ADMIN_SEED_PASSWORD:-}
+      ADMIN_SEED_DEPARTMENT: ${ADMIN_SEED_DEPARTMENT:-인사}
+      ADMIN_SEED_RANK: ${ADMIN_SEED_RANK:-부장}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts:/docker-entrypoint-initdb.d:ro
@@ -29,7 +34,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-hr_assistant}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-hr_assistant}
     ports:
       - "8000:8000"
   frontend:

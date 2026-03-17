@@ -19,7 +19,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!isAuthenticated()) {
-      router.replace("/login");
+      router.replace("/");
       return;
     }
     setUser(getUser());
@@ -27,7 +27,7 @@ export default function DashboardPage() {
 
   const handleLogout = () => {
     logout();
-    router.push("/login");
+    router.push("/");
   };
 
   if (!user) return null;

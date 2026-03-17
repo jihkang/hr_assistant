@@ -35,7 +35,7 @@ uv run hr-assistant-backend
 백엔드는 기본적으로 아래 PostgreSQL 연결 문자열을 사용하도록 설정했습니다.
 
 ```text
-postgresql://postgres:postgres@localhost:5432/hr_assistant
+postgresql://postgres:${POSTGRES_PASSWORD}@localhost:5432/hr_assistant
 ```
 
 컨테이너 기준 서비스 포트:
@@ -43,6 +43,8 @@ postgresql://postgres:postgres@localhost:5432/hr_assistant
 - `frontend`: `http://localhost:3000`
 - `backend`: `http://localhost:8000`
 - `postgres`: `localhost:5432`
+
+초기 관리자 계정은 코드나 문서에 고정하지 않고 `infra/.env`의 `ADMIN_SEED_*` 값으로 주입합니다.
 
 주요 엔드포인트:
 
