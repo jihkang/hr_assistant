@@ -1,0 +1,32 @@
+[project]
+name = "hr-assistant-backend"
+version = "0.1.0"
+description = "FastAPI backend for the HR and general affairs assistant"
+readme = "README.md"
+authors = [
+    { name = "jihokang", email = "jihokang98@voyagergames.gg" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "email-validator>=2.3.0",
+    "fastapi>=0.135.1",
+    "psycopg[binary]>=3.3.3",
+    "pwdlib[argon2]>=0.3.0",
+    "pydantic-settings>=2.13.1",
+    "pyjwt>=2.12.1",
+    "sqlalchemy>=2.0.48",
+    "uvicorn[standard]>=0.42.0",
+]
+
+[project.scripts]
+hr-assistant-backend = "hr_assistant_backend.main:main"
+
+[build-system]
+requires = ["uv_build>=0.9.28,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.0.2",
+]
