@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
 from hr_assistant_backend.schemas.assistant import (
     AssetItem,
@@ -7,6 +7,8 @@ from hr_assistant_backend.schemas.assistant import (
     ChatResponse,
 )
 from hr_assistant_backend.schemas.common import HealthResponse
+from hr_assistant_backend.api.dependencies import get_current_user
+from hr_assistant_backend.models.user import User
 from hr_assistant_backend.services.assistant import AssistantService
 
 router = APIRouter(tags=["assistant"])
@@ -33,5 +35,8 @@ def list_assets(
 
 
 @router.post("/assistant/chat", response_model=ChatResponse)
-def chat(payload: ChatRequest) -> ChatResponse:
-    return service.answer(payload)
+def chat(
+    payload: ChatRequest,
+    current_user: User = Depends(get_current_user),
+) -> ChatResponse:
+    return service.answer(payload, current_user=current_user)
