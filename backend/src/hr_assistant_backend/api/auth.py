@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from hr_assistant_backend.api.dependencies import (
     build_user_summary,
     get_current_user,
+    require_admin,
     require_hr_admin,
     update_last_login,
 )
@@ -196,7 +197,7 @@ def register(
 def create_user_from_admin(
     payload: RegisterRequest,
     db: Session = Depends(get_db),
-    _: User = Depends(require_hr_admin),
+    _: User = Depends(require_admin),
 ) -> RegisterResponse:
     user = _create_user(payload, db)
     return RegisterResponse(message="User created successfully.", user=build_user_summary(user))

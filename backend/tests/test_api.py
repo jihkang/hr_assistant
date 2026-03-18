@@ -118,6 +118,33 @@ def test_hr_admin_can_register_user(client: TestClient) -> None:
     assert payload["user"]["is_admin"] is False
 
 
+def test_non_hr_admin_can_create_user_via_admin_endpoint(client: TestClient) -> None:
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "dev-gm@example.com", "password": "Password123!"},
+    )
+    assert login_response.status_code == 200
+
+    response = client.post(
+        "/api/v1/admin/users",
+        json={
+            "name": "총무 승인 사용자",
+            "email": "ga-approved@example.com",
+            "password": "Password123!",
+            "department": "운영",
+            "rank": "사원",
+            "hire_date": "2026-03-17",
+            "annual_leave_total": 15,
+            "annual_leave_used": 0,
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["user"]["email"] == "ga-approved@example.com"
+    assert payload["user"]["is_admin"] is False
+
+
 def test_non_hr_admin_cannot_register_user(client: TestClient) -> None:
     login_response = client.post(
         "/api/v1/auth/login",
