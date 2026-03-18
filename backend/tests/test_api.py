@@ -58,6 +58,18 @@ def client() -> TestClient:
                 annual_leave_used=4,
             )
         )
+        db.add(
+            User(
+                name="일반 사원",
+                email="staff@example.com",
+                password_hash=hash_password("Password123!"),
+                department=Department.SALES,
+                rank=Rank.STAFF,
+                hire_date=date(2024, 1, 15),
+                annual_leave_total=15,
+                annual_leave_used=1,
+            )
+        )
         db.commit()
 
     with TestClient(app) as test_client:
@@ -138,6 +150,40 @@ def test_non_hr_admin_cannot_register_user(client: TestClient) -> None:
             "annual_leave_used": 0,
         },
     )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "HR admin access required."
+
+
+def test_hr_admin_can_list_users(client: TestClient) -> None:
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "hr-admin@example.com", "password": "Password123!"},
+    )
+    assert login_response.status_code == 200
+
+    response = client.get("/api/v1/admin/users")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total"] == 3
+    assert [user["email"] for user in payload["users"]] == [
+        "dev-gm@example.com",
+        "hr-admin@example.com",
+        "staff@example.com",
+    ]
+    assert payload["users"][1]["is_admin"] is True
+    assert payload["users"][2]["is_admin"] is False
+
+
+def test_non_hr_admin_cannot_list_users(client: TestClient) -> None:
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "dev-gm@example.com", "password": "Password123!"},
+    )
+    assert login_response.status_code == 200
+
+    response = client.get("/api/v1/admin/users")
 
     assert response.status_code == 403
     assert response.json()["detail"] == "HR admin access required."
