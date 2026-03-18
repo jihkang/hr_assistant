@@ -177,6 +177,20 @@ def test_hr_admin_can_list_users(client: TestClient) -> None:
 
 
 def test_non_hr_admin_cannot_list_users(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/assistant/chat",
+        json={"message": "내 연차 잔여 일수 알려줘"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert "인사 관리자" in payload["answer"]
+    assert "13일" in payload["answer"]
+    assert payload["citations"]
+    assert payload["citations"][0]["source"] == "USER_LEAVE_BALANCE"
+
+
+def test_assistant_chat_blocks_other_employee_leave_lookup_before_model_call(client: TestClient) -> None:
     login_response = client.post(
         "/api/v1/auth/login",
         json={"email": "dev-gm@example.com", "password": "Password123!"},
@@ -187,3 +201,32 @@ def test_non_hr_admin_cannot_list_users(client: TestClient) -> None:
 
     assert response.status_code == 403
     assert response.json()["detail"] == "HR admin access required."
+    response = client.post(
+        "/api/v1/assistant/chat",
+        json={"message": "인사 관리자의 연차 잔여 일수 알려줘"},
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "You can only access your own leave information."
+
+
+def test_assistant_chat_returns_asset_response_with_citations(client: TestClient) -> None:
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "dev-gm@example.com", "password": "Password123!"},
+    )
+    assert login_response.status_code == 200
+
+    response = client.post(
+        "/api/v1/assistant/chat",
+        json={"message": "대여 가능한 모니터 알려줘"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert "현재 대여 가능한 모니터는 2대" in payload["answer"]
+    assert len(payload["citations"]) == 2
+    assert {citation["source"] for citation in payload["citations"]} == {
+        "ASSET_INVENTORY",
+        "GA_POLICY_2026_01",
+    }
