@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from hr_assistant_backend.api.dependencies import (
     build_user_summary,
     get_current_user,
+    require_admin,
     require_hr_admin,
     update_last_login,
 )
@@ -21,7 +22,7 @@ from hr_assistant_backend.schemas.auth import (
     RegisterRequest,
     RegisterResponse,
 )
-from hr_assistant_backend.schemas.user import MeResponse
+from hr_assistant_backend.schemas.user import MeResponse, UserListResponse
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 admin_router = APIRouter(prefix="/admin", tags=["admin"])
@@ -196,7 +197,17 @@ def register(
 def create_user_from_admin(
     payload: RegisterRequest,
     db: Session = Depends(get_db),
-    _: User = Depends(require_hr_admin),
+    _: User = Depends(require_admin),
 ) -> RegisterResponse:
     user = _create_user(payload, db)
     return RegisterResponse(message="User created successfully.", user=build_user_summary(user))
+
+
+@admin_router.get("/users", response_model=UserListResponse)
+def list_users(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_hr_admin),
+) -> UserListResponse:
+    users = db.scalars(select(User).order_by(User.email.asc())).all()
+    summaries = [build_user_summary(user) for user in users]
+    return UserListResponse(total=len(summaries), users=summaries)
