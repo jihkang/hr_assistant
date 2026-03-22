@@ -28,6 +28,7 @@ postgresql://postgres:${POSTGRES_PASSWORD}@localhost:5432/hr_assistant
 
 1. `infra/.env.example`을 복사해서 `infra/.env`를 만듭니다.
 2. `POSTGRES_PASSWORD`, `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD`를 실제 값으로 바꿉니다.
+3. 백엔드 보안 설정을 함께 쓰려면 `SECRET_KEY`, `COOKIE_SAMESITE`, `COOKIE_SECURE`도 `infra/.env`에 설정합니다.
 
 ## Init Scripts
 
